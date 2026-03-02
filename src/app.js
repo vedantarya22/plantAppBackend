@@ -5,6 +5,8 @@ import dotenv from "dotenv";
 
 import userPlantRouter from './routes/userPlant.routes.js';
 import siteRouter from './routes/site.routes.js';
+import plantRouter from './routes/plant.routes.js';
+import userRouter from './routes/user.routes.js';
 dotenv.config();
 const app = express();
 
@@ -14,13 +16,15 @@ const PORT = process.env.PORT || 8000;
 
 app.use(express.json());
 
+app.use('/api/users', userRouter);
 app.use("/api/userplants",userPlantRouter);
 app.use('/api/sites', siteRouter);
+app.use('/api/plants', plantRouter);
 
 
 app.get("/",(req,res)=>{
-    console.log("home route");
-    res.send("get home route");
+    console.log("Plant api running");
+    res.send("Plant api running");
 })
 
 
