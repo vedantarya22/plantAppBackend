@@ -7,6 +7,7 @@ import userPlantRouter from './routes/userPlant.routes.js';
 import siteRouter from './routes/site.routes.js';
 import plantRouter from './routes/plant.routes.js';
 import userRouter from './routes/user.routes.js';
+import uploadRouter from "./routes/upload.routes.js"
 dotenv.config();
 const app = express();
 
@@ -20,6 +21,7 @@ app.use('/api/users', userRouter);
 app.use("/api/userplants",userPlantRouter);
 app.use('/api/sites', siteRouter);
 app.use('/api/plants', plantRouter);
+app.use('/api/upload',uploadRouter);
 
 
 app.get("/",(req,res)=>{

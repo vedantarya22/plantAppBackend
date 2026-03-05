@@ -16,7 +16,7 @@ const getUserPlants = async (req,res)=>{
     try{
         const userPlants = await UserPlant
         .find({userId: req.params.userId})
-        .populate('plantId');
+        // .populate('plantId'); // no populate for now as swift reads it as a string 
         return res.status(200).json(userPlants);
     }catch(err){
         return res.status(500).json({message:`Something went wrong ${err}`});
