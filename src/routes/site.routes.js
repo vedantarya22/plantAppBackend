@@ -3,8 +3,8 @@ import { addSite, getUserSites, deleteSite } from '../controllers/site.controlle
 
 const router = Router();
 
+router.route('/user').get(getUserSites);
 router.route('/').post(addSite);
-router.route('/user/:userId').get(getUserSites);
 router.route('/:id').delete(deleteSite);
 
 export default router;
