@@ -5,7 +5,7 @@ import mongoose, { Schema } from "mongoose";
 const userPlantSchema = new mongoose.Schema({
   plantId:  { type: mongoose.Schema.Types.ObjectId, ref: 'Plant', required: true },
   userId:   { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-
+plantName:        { type: String, default: null }, 
   siteName: { type: String },
    siteId:   { type: mongoose.Schema.Types.ObjectId, ref: 'Site' },
   imageData:        { type: String, default: null },

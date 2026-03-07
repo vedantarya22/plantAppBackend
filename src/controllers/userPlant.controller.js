@@ -15,12 +15,16 @@ const getUserPlants = async (req,res)=>{
 };
 
 
-const addUserPlant = async(req,res)=>{
-      try {
+const addUserPlant = async (req, res) => {
+    try {
+        const { plantName, ...rest } = req.body;   // ✅ accept plantName from Swift
+
         const newPlant = new UserPlant({
-            ...req.body,
-            userId: req.userId   //  from JWT, not body
+            ...rest,
+            plantName,                              // ✅ save it
+            userId: req.userId                      // from JWT
         });
+
         const saved = await newPlant.save();
         return res.status(201).json(saved);
     } catch (err) {
@@ -73,28 +77,21 @@ const removeAllPlantsOfType = async (req,res) =>{
     }
 };
 
-const removeSiteWithPlants = async(req,res) =>{
-    try{
-        const {siteId} = req.params;
-        //delete all the plants in the site
-        const plantsResult = await UserPlant.deleteMany({siteId});
+const removeSiteWithPlants = async (req, res) => {
+    try {
+        const { siteId } = req.params;
 
-        const deletedSite = await Site.findByIdAndDelete(siteId);
+        // ✅ Delete all userplants for this site
+        await UserPlant.deleteMany({ siteId });
 
-          if (!deletedSite) {
-      return res.status(404).json({ message: 'Site not found' });
+        // ✅ Delete the site itself
+        await Site.findByIdAndDelete(siteId);
+
+        return res.status(200).json({ message: 'Site and all plants deleted' });
+    } catch (err) {
+        return res.status(500).json({ message: `Something went wrong ${err}` });
     }
-
-      return res.status(200).json({message:`Site deleted with ${plantsResult.deletedCount} plants removed` });
-
-    }catch(err){
-        res.status(500).json({message: `Something went wrong ${err}`});
-    }
-
-
-
-
-}
+};
 
 const markTaskDone = async (req, res) => {
   try {
