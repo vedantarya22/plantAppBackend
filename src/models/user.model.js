@@ -6,7 +6,7 @@ const userSchema = new mongoose.Schema({
   name:               { type: String, required: true },
   username:           { type: String, required: true, unique: true },
   profileImageString: { type: String, default: null },
-  email:              { type: String, unique: true },  
+  email: { type: String, unique: true, sparse: true },  // sparse allows multiple nulls 
   phoneNumber:        { type: String, default: null },
   dateOfBirth:        { type: String, default: null },
 

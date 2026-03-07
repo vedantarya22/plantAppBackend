@@ -1,10 +1,11 @@
 // controllers/site.controller.js
 import Site from '../models/site.model.js';
 
-// mirrors addSite() in SiteStore
+// MARK: mirrors addSite() in SiteStore
 const addSite = async (req, res) => {
   try {
-    const { userId, name, sfSymbol } = req.body;
+    const {name, sfSymbol } = req.body;
+     const userId = req.userId; 
 
     // mirrors your duplicate check in SiteStore
     const existingSite = await Site.findOne({
@@ -26,11 +27,11 @@ const addSite = async (req, res) => {
   }
 };
 
-// get all sites for a user with live plantCount
+// MARK: get all sites for a user with live plantCount
 const getUserSites = async (req, res) => {
   try {
     const sites = await Site
-      .find({ userId: req.params.userId })
+      .find({ userId: req.userId })
       .populate('plantCount');    // ✅ live count from UserPlant
     return res.status(200).json(sites);
   } catch (err) {

@@ -8,6 +8,9 @@ import siteRouter from './routes/site.routes.js';
 import plantRouter from './routes/plant.routes.js';
 import userRouter from './routes/user.routes.js';
 import uploadRouter from "./routes/upload.routes.js"
+import authRouter from './routes/auth.routes.js';
+import protect from './middlewares/auth.middleware.js';
+
 dotenv.config();
 const app = express();
 
@@ -17,11 +20,15 @@ const PORT = process.env.PORT || 8000;
 
 app.use(express.json());
 
-app.use('/api/users', userRouter);
-app.use("/api/userplants",userPlantRouter);
-app.use('/api/sites', siteRouter);
+app.use('/api/auth', authRouter);
 app.use('/api/plants', plantRouter);
-app.use('/api/upload',uploadRouter);
+
+// MARK: Protected — JWT required
+app.use('/api/userplants', protect, userPlantRouter);
+app.use('/api/sites',      protect, siteRouter);
+app.use('/api/upload',     protect, uploadRouter);
+app.use('/api/users',      protect, userRouter);
+
 
 
 app.get("/",(req,res)=>{

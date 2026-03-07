@@ -1,26 +1,30 @@
 import UserPlant from "../models/userPlant.model.js";
 import Plant from "../models/plant.model.js";
 
-const addUserPlant = async(req,res)=>{
-    try{
-        const plant = new UserPlant(req.body);
-        const saved = await plant.save();
-        return res.status(201).json(saved);
-    }catch(err){
-        return res.status(400).json({message: `Something went wrong ${err}`});
-
-    }
-};
 
 const getUserPlants = async (req,res)=>{
-    try{
-        const userPlants = await UserPlant
-        .find({userId: req.params.userId})
-        // .populate('plantId'); // no populate for now as swift reads it as a string 
-        return res.status(200).json(userPlants);
-    }catch(err){
-        return res.status(500).json({message:`Something went wrong ${err}`});
+  try{
+    const userPlants = await UserPlant
+    .find({userId: req.userId})
+    // .populate('plantId'); // no populate for now as swift reads it as a string 
+    return res.status(200).json(userPlants);
+  }catch(err){
+    return res.status(500).json({message:`Something went wrong ${err}`});
+    
+  }
+};
 
+
+const addUserPlant = async(req,res)=>{
+      try {
+        const newPlant = new UserPlant({
+            ...req.body,
+            userId: req.userId   //  from JWT, not body
+        });
+        const saved = await newPlant.save();
+        return res.status(201).json(saved);
+    } catch (err) {
+        return res.status(500).json({ message: `Something went wrong ${err}` });
     }
 };
 
