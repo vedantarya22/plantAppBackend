@@ -15,7 +15,8 @@
     "express": "^5.2.1",
     "http-status": "^2.1.0",
     "mongodb": "^7.1.0",
-    "mongoose": "^9.2.2",
+    "mongoose": "^9.2.4",
+    "mongosh": "^2.7.0",
     "nodemon": "^3.1.14"
   }
 }
