@@ -4,7 +4,7 @@ import Site from '../models/site.model.js';
 // MARK: mirrors addSite() in SiteStore
 const addSite = async (req, res) => {
   try {
-    const {name, sfSymbol } = req.body;
+    const {name, icon } = req.body;
      const userId = req.userId; 
 
     // mirrors your duplicate check in SiteStore
@@ -18,7 +18,7 @@ const addSite = async (req, res) => {
       return res.status(200).json(existingSite);
     }
 
-    const newSite = new Site({ userId, name, sfSymbol });
+    const newSite = new Site({ userId, name, icon });
     const saved = await newSite.save();
     return res.status(201).json(saved);
 

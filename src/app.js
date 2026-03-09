@@ -10,6 +10,7 @@ import userRouter from './routes/user.routes.js';
 import uploadRouter from "./routes/upload.routes.js"
 import authRouter from './routes/auth.routes.js';
 import protect from './middlewares/auth.middleware.js';
+import postRouter from "./routes/post.routes.js";
 
 dotenv.config();
 const app = express();
@@ -28,6 +29,7 @@ app.use('/api/userplants', protect, userPlantRouter);
 app.use('/api/sites',      protect, siteRouter);
 app.use('/api/upload',     protect, uploadRouter);
 app.use('/api/users',      protect, userRouter);
+app.use('/api/posts', protect,postRouter);
 
 
 

@@ -15,6 +15,8 @@ const userSchema = new mongoose.Schema({
   authProvider:       { type: String, enum: ['local', 'google', 'apple'], default: 'local' },
   isVerified:         { type: Boolean, default: false },
 
+  savedPosts : [{type:mongoose.Schema.Types.ObjectId,ref : "Post"}],
+
 }, { timestamps: true });
 
 // ✅ Virtual: plantCount calculated on the fly, never stored
