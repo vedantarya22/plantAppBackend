@@ -1,42 +1,33 @@
 // routes/post.routes.js
-import { Router } from 'express';
+import express from 'express';
 import {
-    createPost,
-    getFeed,
-    getPostsByUser,
-    deletePost,
+    createPost, getFeed, getPost, getPostsByUser, deletePost,
     toggleLike,
-    addComment,
-    deleteComment,
-    getComments,
-    toggleSave,
-    getSavedPosts,
+    addComment, getComments, deleteComment,
+    toggleSave, getSavedPosts,
 } from '../controllers/post.controller.js';
+import  protect from '../middlewares/auth.middleware.js';
 
-const router = Router();
+const router = express.Router();
+router.use(protect);  // ✅ all routes require JWT
 
-// ── Feed ──────────────────────────────────────
-router.get('/feed', getFeed);
+// Posts
+router.post('/',                    createPost);
+router.get('/feed',                 getFeed);
+router.get('/saved',                getSavedPosts);
+router.get('/user/:userId',         getPostsByUser);
+router.get('/:id',                  getPost);
+router.delete('/:id',               deletePost);
 
-// ── Saved posts ───────────────────────────────
-router.get('/saved', getSavedPosts);
+// Likes
+router.post('/:id/like',            toggleLike);
 
-// ── Posts by user ─────────────────────────────
-router.get('/user/:userId', getPostsByUser);
+// Comments
+router.post('/:id/comments',        addComment);
+router.get('/:id/comments',         getComments);
+router.delete('/:id/comments/:commentId', deleteComment);
 
-// ── Create / Delete a post ────────────────────
-router.post('/', createPost);
-router.delete('/:id', deletePost);
-
-// ── Like toggle ───────────────────────────────
-router.post('/:id/like', toggleLike);
-
-// ── Comment add / delete / get ───────────────
-router.get('/:id/comments', getComments);
-router.post('/:id/comment', addComment);
-router.delete('/:id/comment/:commentId', deleteComment);
-
-// ── Save toggle ───────────────────────────────
-router.post('/:id/save', toggleSave);
+// Save
+router.post('/:id/save',            toggleSave);
 
 export default router;

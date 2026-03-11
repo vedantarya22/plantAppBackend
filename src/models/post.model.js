@@ -20,9 +20,9 @@ const postSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-// ✅ Feed sorted by newest first
+// Feed sorted by newest first
 postSchema.index({ createdAt: -1 });
-// ✅ Profile page — all posts by a user
+// Profile page — all posts by a user
 postSchema.index({ userId: 1, createdAt: -1 });
 
 export default mongoose.model('Post', postSchema);

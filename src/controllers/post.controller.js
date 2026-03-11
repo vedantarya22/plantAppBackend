@@ -1,229 +1,275 @@
 // controllers/post.controller.js
-import Post from '../models/post.model.js';
-import User from '../models/user.model.js';
+import Post    from '../models/post.model.js';
+import Like    from '../models/like.model.js';
+import Comment from '../models/comment.model.js';
+import User    from '../models/user.model.js';
 
-// ─────────────────────────────────────────────
-// Helper: format a post document for the client.
-// Derives isLiked and likesCount from the likers array.
-// ─────────────────────────────────────────────
-const formatPost = (post, requestingUserId) => {
-    const obj = post.toObject();
-    obj.likesCount = obj.likers.length;
-    obj.isLiked = requestingUserId
-        ? obj.likers.map(id => id.toString()).includes(requestingUserId.toString())
-        : false;
-    return obj;
-};
+// ── Hydrate post with isLikedByMe + isSaved ───────────────────────────────────
+const hydratePost = (post, likedSet, savedSet) => ({
+    ...post.toObject(),
+    isLikedByMe: likedSet.has(post._id.toString()),
+    isSaved:     savedSet.has(post._id.toString()),
+});
 
-// ─────────────────────────────────────────────
-// POST /api/posts
-// Create a new post
-// Body: { userId, postImageString, caption }
-// ─────────────────────────────────────────────
+// ── Create Post ───────────────────────────────────────────────────────────────
 export const createPost = async (req, res) => {
     try {
-        const { userId, postImageString, caption } = req.body;
+        const { postImageString, caption } = req.body;
 
-        if (!userId || !postImageString) {
-            return res.status(400).json({ message: 'userId and postImageString are required.' });
+        if (!postImageString) {
+            return res.status(400).json({ message: 'postImageString is required' });
         }
 
-        const post = await Post.create({ userId, postImageString, caption });
+        const post = await Post.create({
+            userId: req.userId,   // ✅ from JWT — not from body
+            postImageString,
+            caption: caption || '',
+        });
 
-        // Populate author so Swift gets the full User object immediately
-        const populated = await post.populate('userId', 'name username profileImageString');
+        await post.populate('userId', 'name username profileImageString');
 
-        return res.status(201).json(formatPost(populated, userId));
-    } catch (err) {
-        return res.status(500).json({ message: `Something went wrong: ${err}` });
-    }
-};
-
-// ─────────────────────────────────────────────
-// GET /api/posts/feed?requestingUserId=xxx
-// All posts, newest first, with author populated
-// ─────────────────────────────────────────────
-export const getFeed = async (req, res) => {
-    try {
-        const { requestingUserId } = req.query;
-
-        const posts = await Post.find()
-            .sort({ timestamp: -1 })
-            .populate('userId', 'name username profileImageString');
-
-        return res.status(200).json(posts.map(p => formatPost(p, requestingUserId)));
-    } catch (err) {
-        return res.status(500).json({ message: `Something went wrong: ${err}` });
-    }
-};
-
-// ─────────────────────────────────────────────
-// GET /api/posts/user/:userId?requestingUserId=xxx
-// All posts by one specific user
-// ─────────────────────────────────────────────
-export const getPostsByUser = async (req, res) => {
-    try {
-        const { requestingUserId } = req.query;
-
-        const posts = await Post.find({ userId: req.params.userId })
-            .sort({ timestamp: -1 })
-            .populate('userId', 'name username profileImageString');
-
-        return res.status(200).json(posts.map(p => formatPost(p, requestingUserId)));
-    } catch (err) {
-        return res.status(500).json({ message: `Something went wrong: ${err}` });
-    }
-};
-
-// ─────────────────────────────────────────────
-// DELETE /api/posts/:id
-// Delete a post — only the author can delete
-// Body: { userId }
-// ─────────────────────────────────────────────
-export const deletePost = async (req, res) => {
-    try {
-        const { userId } = req.body;
-        const post = await Post.findById(req.params.id);
-
-        if (!post) return res.status(404).json({ message: 'Post not found.' });
-
-        if (post.userId.toString() !== userId) {
-            return res.status(403).json({ message: 'You can only delete your own posts.' });
-        }
-
-        // 1️⃣ Delete the post itself
-        await post.deleteOne();
-
-        // 2️⃣ Scrub this post ID from EVERY user's savedPosts array
-        // This ensures if Sarah deletes a post, it disappears from Vedant's saved list immediately
-        await User.updateMany(
-            { savedPosts: post._id },
-            { $pull: { savedPosts: post._id } }
-        );
-
-        return res.status(200).json({ message: 'Post deleted.' });
-    } catch (err) {
-        return res.status(500).json({ message: `Something went wrong: ${err}` });
-    }
-};
-
-// ─────────────────────────────────────────────
-// POST /api/posts/:id/like
-// Toggle like — adds or removes userId from likers array
-// Body: { userId }
-// Returns: { isLiked, likesCount }
-// ─────────────────────────────────────────────
-export const toggleLike = async (req, res) => {
-    try {
-        const { userId } = req.body;
-        const post = await Post.findById(req.params.id);
-        if (!post) return res.status(404).json({ message: 'Post not found.' });
-
-        const alreadyLiked = post.likers.map(id => id.toString()).includes(userId);
-
-        if (alreadyLiked) {
-            // Unlike — pull the userId out
-            await Post.findByIdAndUpdate(req.params.id, { $pull: { likers: userId } });
-        } else {
-            // Like — add the userId (addToSet prevents duplicates)
-            await Post.findByIdAndUpdate(req.params.id, { $addToSet: { likers: userId } });
-        }
-
-        const updated = await Post.findById(req.params.id);
-        return res.status(200).json({
-            isLiked: !alreadyLiked,
-            likesCount: updated.likers.length,
+        return res.status(201).json({
+            ...post.toObject(),
+            isLikedByMe: false,
+            isSaved:     false,
         });
     } catch (err) {
         return res.status(500).json({ message: `Something went wrong: ${err}` });
     }
 };
 
-// ─────────────────────────────────────────────
-// POST /api/posts/:id/comment
-// Add a comment to a post
-// Body: { username, text }
-// ─────────────────────────────────────────────
-export const addComment = async (req, res) => {
+// ── Get Feed (paginated, newest first) ───────────────────────────────────────
+export const getFeed = async (req, res) => {
     try {
-        const { username, text } = req.body;
+        const page  = parseInt(req.query.page)  || 1;
+        const limit = parseInt(req.query.limit) || 20;
+        const skip  = (page - 1) * limit;
 
-        if (!username || !text) {
-            return res.status(400).json({ message: 'username and text are required.' });
+        const posts = await Post.find()
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .populate('userId', 'name username profileImageString');
+
+        // ✅ Batch check — did I like / save any of these posts?
+        const postIds = posts.map(p => p._id);
+
+        const [userLikes, currentUser] = await Promise.all([
+            Like.find({ postId: { $in: postIds }, userId: req.userId }).select('postId'),
+            User.findById(req.userId).select('savedPosts'),
+        ]);
+
+        const likedSet = new Set(userLikes.map(l => l.postId.toString()));
+        const savedSet = new Set((currentUser?.savedPosts || []).map(id => id.toString()));
+
+        return res.status(200).json({
+            posts:   posts.map(p => hydratePost(p, likedSet, savedSet)),
+            page,
+            hasMore: posts.length === limit,
+        });
+    } catch (err) {
+        return res.status(500).json({ message: `Something went wrong: ${err}` });
+    }
+};
+
+// ── Get Posts By User ─────────────────────────────────────────────────────────
+export const getPostsByUser = async (req, res) => {
+    try {
+        const posts = await Post.find({ userId: req.params.userId })
+            .sort({ createdAt: -1 })
+            .populate('userId', 'name username profileImageString');
+
+        const postIds = posts.map(p => p._id);
+
+        const [userLikes, currentUser] = await Promise.all([
+            Like.find({ postId: { $in: postIds }, userId: req.userId }).select('postId'),
+            User.findById(req.userId).select('savedPosts'),
+        ]);
+
+        const likedSet = new Set(userLikes.map(l => l.postId.toString()));
+        const savedSet = new Set((currentUser?.savedPosts || []).map(id => id.toString()));
+
+        return res.status(200).json(posts.map(p => hydratePost(p, likedSet, savedSet)));
+    } catch (err) {
+        return res.status(500).json({ message: `Something went wrong: ${err}` });
+    }
+};
+
+// ── Get Single Post ───────────────────────────────────────────────────────────
+export const getPost = async (req, res) => {
+    try {
+        const post = await Post.findById(req.params.id)
+            .populate('userId', 'name username profileImageString');
+
+        if (!post) return res.status(404).json({ message: 'Post not found' });
+
+        const [liked, currentUser] = await Promise.all([
+            Like.exists({ postId: post._id, userId: req.userId }),
+            User.findById(req.userId).select('savedPosts'),
+        ]);
+
+        const savedSet = new Set((currentUser?.savedPosts || []).map(id => id.toString()));
+
+        return res.status(200).json({
+            ...post.toObject(),
+            isLikedByMe: !!liked,
+            isSaved:     savedSet.has(post._id.toString()),
+        });
+    } catch (err) {
+        return res.status(500).json({ message: `Something went wrong: ${err}` });
+    }
+};
+
+// ── Delete Post ───────────────────────────────────────────────────────────────
+export const deletePost = async (req, res) => {
+    try {
+        const post = await Post.findById(req.params.id);
+        if (!post) return res.status(404).json({ message: 'Post not found' });
+
+        if (post.userId.toString() !== req.userId) {
+            return res.status(403).json({ message: 'Not authorised' });
         }
 
-        const post = await Post.findByIdAndUpdate(
-            req.params.id,
-            { $push: { comments: { username, text, timestamp: new Date() } } },
-            { returnDocument: 'after' }
-        );
+        // ✅ Clean up likes, comments, saved refs atomically
+        await Promise.all([
+            Like.deleteMany({ postId: post._id }),
+            Comment.deleteMany({ postId: post._id }),
+            User.updateMany({ savedPosts: post._id }, { $pull: { savedPosts: post._id } }),
+            post.deleteOne(),
+        ]);
 
-        if (!post) return res.status(404).json({ message: 'Post not found.' });
-
-        // Return just the newest comment (last in array)
-        return res.status(201).json(post.comments[post.comments.length - 1]);
+        return res.status(200).json({ message: 'Post deleted' });
     } catch (err) {
         return res.status(500).json({ message: `Something went wrong: ${err}` });
     }
 };
 
-// ─────────────────────────────────────────────
-// DELETE /api/posts/:id/comment/:commentId
-// Remove a specific comment by its _id
-// ─────────────────────────────────────────────
-export const deleteComment = async (req, res) => {
+// ── Toggle Like ───────────────────────────────────────────────────────────────
+export const toggleLike = async (req, res) => {
     try {
-        const post = await Post.findByIdAndUpdate(
-            req.params.id,
-            { $pull: { comments: { _id: req.params.commentId } } },
-            { returnDocument: 'after' }
-        );
+        const { id: postId } = req.params;
 
-        if (!post) return res.status(404).json({ message: 'Post not found.' });
+        const post = await Post.findById(postId);
+        if (!post) return res.status(404).json({ message: 'Post not found' });
 
-        return res.status(200).json({ message: 'Comment deleted.' });
+        const existing = await Like.findOne({ postId, userId: req.userId });
+
+        if (existing) {
+            // ✅ Unlike
+            await Promise.all([
+                existing.deleteOne(),
+                Post.findByIdAndUpdate(postId, { $inc: { likesCount: -1 } }),
+            ]);
+            return res.status(200).json({
+                isLiked:    false,
+                likesCount: Math.max(0, post.likesCount - 1),
+            });
+        } else {
+            // ✅ Like
+            await Promise.all([
+                Like.create({ postId, userId: req.userId }),
+                Post.findByIdAndUpdate(postId, { $inc: { likesCount: 1 } }),
+            ]);
+            return res.status(200).json({
+                isLiked:    true,
+                likesCount: post.likesCount + 1,
+            });
+        }
+    } catch (err) {
+        if (err.code === 11000) {
+            return res.status(200).json({ isLiked: true });
+        }
+        return res.status(500).json({ message: `Something went wrong: ${err}` });
+    }
+};
+
+// ── Add Comment ───────────────────────────────────────────────────────────────
+export const addComment = async (req, res) => {
+    try {
+        const { id: postId } = req.params;
+        const { text } = req.body;
+
+        if (!text?.trim()) {
+            return res.status(400).json({ message: 'Comment text is required' });
+        }
+
+        const post = await Post.findById(postId);
+        if (!post) return res.status(404).json({ message: 'Post not found' });
+
+        const [comment] = await Promise.all([
+            Comment.create({ postId, userId: req.userId, text: text.trim() }),
+            Post.findByIdAndUpdate(postId, { $inc: { commentsCount: 1 } }),
+        ]);
+
+        await comment.populate('userId', 'name username profileImageString');
+
+        return res.status(201).json(comment);
     } catch (err) {
         return res.status(500).json({ message: `Something went wrong: ${err}` });
     }
 };
 
-// ─────────────────────────────────────────────
-// GET /api/posts/:id/comments
-// Get all comments on a specific post, oldest first
-// ─────────────────────────────────────────────
+// ── Get Comments (paginated) ──────────────────────────────────────────────────
 export const getComments = async (req, res) => {
     try {
-        const post = await Post.findById(req.params.id).select('comments');
-        if (!post) return res.status(404).json({ message: 'Post not found.' });
+        const page  = parseInt(req.query.page)  || 1;
+        const limit = parseInt(req.query.limit) || 30;
+        const skip  = (page - 1) * limit;
 
-        // Sort oldest → newest so the UI renders in chronological order
-        const sorted = [...post.comments].sort((a, b) => a.timestamp - b.timestamp);
-        return res.status(200).json(sorted);
+        const comments = await Comment.find({ postId: req.params.id })
+            .sort({ createdAt: 1 })
+            .skip(skip)
+            .limit(limit)
+            .populate('userId', 'name username profileImageString');
+
+        return res.status(200).json({
+            comments,
+            page,
+            hasMore: comments.length === limit,
+        });
     } catch (err) {
         return res.status(500).json({ message: `Something went wrong: ${err}` });
     }
 };
 
-// ─────────────────────────────────────────────
-// POST /api/posts/:id/save
-// Toggle save — adds or removes postId from user's savedPosts array
-// Body: { userId }
-// Returns: { isSaved }
-// ─────────────────────────────────────────────
+// ── Delete Comment ────────────────────────────────────────────────────────────
+export const deleteComment = async (req, res) => {
+    try {
+        const comment = await Comment.findById(req.params.commentId);
+        if (!comment) return res.status(404).json({ message: 'Comment not found' });
+
+        if (comment.userId.toString() !== req.userId) {
+            return res.status(403).json({ message: 'Not authorised' });
+        }
+
+        await Promise.all([
+            comment.deleteOne(),
+            Post.findByIdAndUpdate(req.params.id, { $inc: { commentsCount: -1 } }),
+        ]);
+
+        return res.status(200).json({ message: 'Comment deleted' });
+    } catch (err) {
+        return res.status(500).json({ message: `Something went wrong: ${err}` });
+    }
+};
+
+// ── Toggle Save ───────────────────────────────────────────────────────────────
 export const toggleSave = async (req, res) => {
     try {
-        const { userId } = req.body;
         const postId = req.params.id;
 
-        const user = await User.findById(userId);
-        if (!user) return res.status(404).json({ message: 'User not found.' });
+        const post = await Post.findById(postId);
+        if (!post) return res.status(404).json({ message: 'Post not found' });
+
+        const user = await User.findById(req.userId);
+        if (!user) return res.status(404).json({ message: 'User not found' });
 
         const alreadySaved = user.savedPosts.map(id => id.toString()).includes(postId);
 
         if (alreadySaved) {
-            await User.findByIdAndUpdate(userId, { $pull: { savedPosts: postId } });
+            await User.findByIdAndUpdate(req.userId, { $pull: { savedPosts: postId } });
         } else {
-            await User.findByIdAndUpdate(userId, { $addToSet: { savedPosts: postId } });
+            await User.findByIdAndUpdate(req.userId, { $addToSet: { savedPosts: postId } });
         }
 
         return res.status(200).json({ isSaved: !alreadySaved });
@@ -232,32 +278,29 @@ export const toggleSave = async (req, res) => {
     }
 };
 
-// ─────────────────────────────────────────────
-// GET /api/posts/saved?requestingUserId=xxx
-// Get all private saved posts for the currently requesting user
-// ─────────────────────────────────────────────
+// ── Get Saved Posts ───────────────────────────────────────────────────────────
 export const getSavedPosts = async (req, res) => {
     try {
-        const { requestingUserId } = req.query;
-
-        if (!requestingUserId) {
-            return res.status(400).json({ message: 'requestingUserId is required.' });
-        }
-
-        const user = await User.findById(requestingUserId).populate({
+        const user = await User.findById(req.userId).populate({
             path: 'savedPosts',
-            populate: { path: 'userId', select: 'name username profileImageString' }
+            populate: { path: 'userId', select: 'name username profileImageString' },
+            options: { sort: { createdAt: -1 } },
         });
 
-        if (!user) return res.status(404).json({ message: 'User not found.' });
+        if (!user) return res.status(404).json({ message: 'User not found' });
 
-        // Filter out any null posts (in case a cleanup failed) and format
-        const validSavedPosts = user.savedPosts.filter(p => p != null);
+        const validPosts = user.savedPosts.filter(Boolean);
+        const postIds    = validPosts.map(p => p._id);
 
-        // Reverse it so newest saved is at top, like IG
-        const formatted = validSavedPosts.map(p => formatPost(p, requestingUserId)).reverse();
+        const userLikes = await Like.find({
+            postId: { $in: postIds },
+            userId: req.userId,
+        }).select('postId');
 
-        return res.status(200).json(formatted);
+        const likedSet = new Set(userLikes.map(l => l.postId.toString()));
+        const savedSet = new Set(postIds.map(id => id.toString()));
+
+        return res.status(200).json(validPosts.map(p => hydratePost(p, likedSet, savedSet)));
     } catch (err) {
         return res.status(500).json({ message: `Something went wrong: ${err}` });
     }
