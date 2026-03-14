@@ -1,6 +1,9 @@
 import cloudinary from "../config/cloudinary.js";
 
 const uploadImage = async (req,res)=>{
+
+    console.log('📦 Upload body size:', JSON.stringify(req.body).length, 'bytes');
+console.log('📦 Image field present:', !!req.body.image);
     try{
         const {image} = req.body; //base 64 from swift
         if(!image){
