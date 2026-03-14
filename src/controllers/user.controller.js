@@ -51,7 +51,30 @@ const getAllUser = async (req, res) => {
 };
 
 
+const updateUser = async (req, res) => {
+    try {
+        const { name, username, profileImageString } = req.body;
+ 
+        // Only the user themselves can update their profile
+        if (req.userId !== req.params.id) {
+            return res.status(403).json({ message: 'Unauthorized' });
+        }
+ 
+        const updated = await User.findByIdAndUpdate(
+            req.params.id,
+            { name, username, profileImageString },
+            { new: true }           // return updated doc
+        ).select('-password');
+ 
+        if (!updated) return res.status(404).json({ message: 'User not found' });
+ 
+        return res.status(200).json(updated);
+    } catch (err) {
+        return res.status(500).json({ message: `Something went wrong ${err}` });
+    }
+};
 
-export { createUser, getUserById,getAllUser };
+
+export { createUser, getUserById,getAllUser,updateUser };
 
 
