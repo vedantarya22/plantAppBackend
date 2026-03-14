@@ -13,7 +13,7 @@ export const toggleLike = async (req, res) => {
         const existing = await Like.findOne({ postId, userId: req.userId });
 
         if (existing) {
-            // Unlike — remove like + decrement count atomically
+            // ✅ Unlike — remove like + decrement count atomically
             await Promise.all([
                 existing.deleteOne(),
                 Post.findByIdAndUpdate(postId, { $inc: { likesCount: -1 } }),
@@ -24,7 +24,7 @@ export const toggleLike = async (req, res) => {
                 likesCount: Math.max(0, post.likesCount - 1),
             });
         } else {
-            // Like — create like + increment count atomically
+            // ✅ Like — create like + increment count atomically
             await Promise.all([
                 Like.create({ postId, userId: req.userId }),
                 Post.findByIdAndUpdate(postId, { $inc: { likesCount: 1 } }),
