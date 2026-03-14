@@ -32,10 +32,19 @@ const getUserById = async (req, res) => {
 // user.controller.js — small fix to getAllUser
 const getAllUser = async (req, res) => {
     try {
-        const users = await User.find({ _id: { $ne: req.userId } })  // exclude self
-            .select('-password')   //never send password hash
+        const users = await User.find({ _id: { $ne: req.userId } })
+            .select('-password')
             .sort({ name: 1 });
-        return res.status(200).json(users);
+
+        // ✅ Add plantCount to each user
+        const usersWithCount = await Promise.all(
+            users.map(async (user) => {
+                const plantCount = await UserPlant.countDocuments({ userId: user._id });
+                return { ...user.toJSON(), plantCount };
+            })
+        );
+
+        return res.status(200).json(usersWithCount);
     } catch (err) {
         return res.status(500).json({ message: `Something went wrong ${err}` });
     }

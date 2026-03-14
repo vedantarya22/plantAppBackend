@@ -128,4 +128,15 @@ const markTaskDone = async (req, res) => {
   }
 };
 
-export { addUserPlant, getUserPlants, updateCare,markTaskDone,removePlant,removeAllPlantsOfType,removeSiteWithPlants };
+// GET /api/userplants/count/:userId
+const getUserPlantCount = async(req,res)=>{
+     try {
+        const count = await UserPlant.countDocuments({ userId: req.params.userId });
+        res.json({ count });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+}
+
+
+export { addUserPlant, getUserPlants, updateCare,markTaskDone,removePlant,removeAllPlantsOfType,removeSiteWithPlants,getUserPlantCount };
