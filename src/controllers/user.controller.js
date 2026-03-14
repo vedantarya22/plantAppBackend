@@ -1,4 +1,5 @@
 import User from '../models/user.model.js';
+import UserPlant from "../models/userPlant.model.js";
 
 const createUser = async (req, res) => {
     try {
@@ -17,11 +18,13 @@ const createUser = async (req, res) => {
 
 const getUserById = async (req, res) => {
     try {
-        const user = await User.findById(req.params.id).select('-password'); // ✅
+        const user = await User.findById(req.params.id).select('-password');
         if (!user) return res.status(404).json({ message: 'User not found' });
-        return res.status(200).json(user);
+        // Add live plant count to response
+        const plantCount = await UserPlant.countDocuments({ userId: req.params.id });
+        res.json({ ...user.toJSON(), plantCount });
     } catch (err) {
-        return res.status(500).json({ message: `Something went wrong ${err}` });
+        res.status(500).json({ message: err.message });
     }
 };
 
