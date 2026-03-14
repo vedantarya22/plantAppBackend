@@ -52,6 +52,8 @@ const getAllUser = async (req, res) => {
 
 
 const updateUser = async (req, res) => {
+    console.log('🔥 updateUser hit — userId:', req.userId, 'paramId:', req.params.id);
+    console.log('📦 body:', req.body);
     try {
         const { name, username, profileImageString } = req.body;
  
