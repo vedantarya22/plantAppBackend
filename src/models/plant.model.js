@@ -43,18 +43,19 @@ const plantSchema = new mongoose.Schema(
     benefits:        { type: [String], default: [] },
     pet_friendly:    { type: Boolean, default: false },              // 
     toxic:           { type: Boolean, default: false },
-    light_required:  {                                               // 
-      type: String,
-      enum: [
-        "low_light",
-        "low_to_medium",
-        "low_to_bright_indirect",
-        "medium_light",
-        "bright_indirect",
-        "partial_sunlight",
-        "full_sunlight",
-      ],
-    },
+    light_required: {
+  type: String,
+  enum: [
+    "low_light",
+    "low_to_medium",
+    "low_to_bright_indirect",
+    "medium_light",
+    "bright_indirect",
+    "partial_sunlight",
+    "full_to_partial_sunlight",  // ← added
+    "full_sunlight",
+  ],
+},
     care_difficulty: {                                               // 
       type: String,
       enum: ["easy", "moderate", "advanced"],
