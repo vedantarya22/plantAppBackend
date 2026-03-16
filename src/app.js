@@ -42,7 +42,9 @@ app.use('/api/upload',     protect, uploadRouter);
 app.use('/api/users',      protect, userRouter);
 app.use('/api/posts', protect,postRouter);
 
-
+app.get("/health", (req, res) => {
+    res.status(200).json({message: "OK"});
+})
 
 app.get("/",(req,res)=>{
     console.log("Plant api running");
