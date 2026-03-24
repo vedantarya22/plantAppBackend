@@ -4,6 +4,10 @@ import bcrypt from 'bcryptjs';
 import jwt    from 'jsonwebtoken';
 import crypto from 'crypto';
 import { sendVerificationEmail } from '../services/email.service.js';
+import { OAuth2Client } from 'google-auth-library';
+
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // MARK: - Helpers
 
@@ -101,7 +105,7 @@ const verifyEmail = async (req, res) => {
         user.verifyTokenExpiry = undefined;
         await user.save();
 
-        console.log(`✅ Email verified for ${user.email}`);
+        console.log(` Email verified for ${user.email}`);
 
         return res.status(200).send(`
             <html>
@@ -123,7 +127,7 @@ const verifyEmail = async (req, res) => {
         `);
 
     } catch (err) {
-        console.error('❌ Verify error:', err);
+        console.error(' Verify error:', err);
         return res.status(500).json({ message: `Verification failed: ${err}` });
     }
 };
@@ -177,9 +181,87 @@ const login = async (req, res) => {
         });
 
     } catch (err) {
-        console.error('❌ Login error:', err);
+        console.error(' Login error:', err);
         return res.status(500).json({ message: `Login failed: ${err}` });
     }
 };
 
-export { signup, login, verifyEmail };
+
+
+
+// MARK: - Google Auth
+const googleAuth = async (req, res) => {
+    try {
+        const { idToken } = req.body;
+
+        if (!idToken) {
+            return res.status(400).json({ message: 'ID token is required' });
+        }
+
+        // MARK: Verify Google ID Token
+        const ticket = await googleClient.verifyIdToken({
+            idToken,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
+
+        const payload = ticket.getPayload();
+        const { sub: googleId, email, name, picture } = payload;
+
+        // MARK: Check if user already exists
+        let user = await User.findOne({ email });
+
+        if (user) {
+            // User exists but signed up with local — block
+            if (user.authProvider === 'local') {
+                return res.status(409).json({
+                    message: 'An account with this email already exists. Please log in with your password.'
+                });
+            }
+            // Returning Google user — just log in
+        } else {
+            // MARK: New Google user — auto-generate a username
+            const baseUsername = name.toLowerCase().replace(/\s+/g, '') + '_' + googleId.slice(-5);
+            let username = baseUsername;
+            let counter = 1;
+
+            // Ensure username is unique
+            while (await User.findOne({ username })) {
+                username = baseUsername + counter++;
+            }
+
+            user = await User.create({
+                name,
+                email,
+                username,
+                profileImageString: picture ?? null,
+                authProvider:       'google',
+                isVerified:         true,   // Google already verified the email
+                password:           null,
+            });
+
+            console.log(`Google Signup — new user ${email}`);
+        }
+
+        // MARK: Generate JWT
+        const token = generateToken(user._id);
+        console.log(`Google Auth — ${user.email}`);
+
+        return res.status(200).json({
+            token,
+            user: {
+                _id:                user._id,
+                name:               user.name,
+                username:           user.username,
+                email:              user.email,
+                profileImageString: user.profileImageString,
+            }
+        });
+
+    } catch (err) {
+        console.error('Google Auth error:', err);
+        return res.status(500).json({ message: `Google auth failed: ${err.message}` });
+    }
+};
+
+export { signup, login, verifyEmail, googleAuth };
+
