@@ -10,10 +10,11 @@ const userSchema = new mongoose.Schema({
   phoneNumber:        { type: String, default: null },
   dateOfBirth:        { type: String, default: null },
 
-  // 🔐 Auth fields — defined now, not used yet
   password:           { type: String, default: null },
   authProvider:       { type: String, enum: ['local', 'google', 'apple'], default: 'local' },
   isVerified:         { type: Boolean, default: false },
+   verifyToken:        { type: String,  default: null },      
+    verifyTokenExpiry:  { type: Date,    default: null },       
 
   savedPosts : [{type:mongoose.Schema.Types.ObjectId,ref : "Post"}],
 
