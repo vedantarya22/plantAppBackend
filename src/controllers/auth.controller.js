@@ -151,9 +151,12 @@ const login = async (req, res) => {
                 message: 'Please verify your email before logging in. Check your inbox.'
             });
         }
+        console.log("User found:", user.email);
+        console.log("Password from DB:", user.password);
 
         // MARK: Password Check
         const isMatch = await bcrypt.compare(password, user.password);
+        console.log("Password checked");
         if (!isMatch) {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
