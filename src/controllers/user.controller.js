@@ -1,5 +1,8 @@
 import User from '../models/user.model.js';
 import UserPlant from "../models/userPlant.model.js";
+import Post from "../models/post.model.js"
+import Like from "../models/like.model.js"
+import Comment from "../models/comment.model.js"
 
 const createUser = async (req, res) => {
     try {
