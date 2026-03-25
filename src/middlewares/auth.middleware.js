@@ -13,7 +13,7 @@ const protect = (req, res, next) => {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.userId = decoded.userId;   // ✅ available in all protected routes
+        req.userId = decoded.userId;   //  in all protected routes, we can now access req.userId to identify the user
         next();
     } catch (err) {
         return res.status(401).json({ message: 'Invalid or expired token' });

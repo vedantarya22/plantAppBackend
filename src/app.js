@@ -51,33 +51,33 @@ app.get("/",(req,res)=>{
     res.send("Plant api running");
 })
 
-// ── Socket.io ────────────────────────────────────────────────
+//  Socket.io
 // Maps userId → socketId so we can find a user's socket
 const onlineUsers = new Map();   // userId → socketId
  
 io.on("connection", (socket) => {
-    console.log(`🔌 Socket connected: ${socket.id}`);
+    console.log(` Socket connected: ${socket.id}`);
  
     // Client emits this right after connecting, passing their userId
     socket.on("register", (userId) => {
         onlineUsers.set(userId, socket.id);
-        console.log(`✅ User registered: ${userId} → ${socket.id}`);
-        console.log(`👥 Online users: ${onlineUsers.size}`);
+        console.log(` User registered: ${userId} → ${socket.id}`);
+        console.log(` Online users: ${onlineUsers.size}`);
     });
  
     // Client emits this to send a message
     // payload: { senderId, receiverId, text, messageId, timestamp }
     socket.on("sendMessage", (payload) => {
-        console.log(`💬 Message from ${payload.senderId} to ${payload.receiverId}: ${payload.text}`);
+        console.log(` Message from ${payload.senderId} to ${payload.receiverId}: ${payload.text}`);
  
         const receiverSocketId = onlineUsers.get(payload.receiverId);
         if (receiverSocketId) {
             // Receiver is online — forward immediately
             io.to(receiverSocketId).emit("receiveMessage", payload);
-            console.log(`📨 Delivered to socket ${receiverSocketId}`);
+            console.log(` Delivered to socket ${receiverSocketId}`);
         } else {
             // Receiver is offline — message is lost (by design for now)
-            console.log(`⚠️ User ${payload.receiverId} is offline — message not delivered`);
+            console.log(` User ${payload.receiverId} is offline — message not delivered`);
         }
     });
  
@@ -86,7 +86,7 @@ io.on("connection", (socket) => {
         for (const [userId, socketId] of onlineUsers.entries()) {
             if (socketId === socket.id) {
                 onlineUsers.delete(userId);
-                console.log(`❌ User disconnected: ${userId}`);
+                console.log(` User disconnected: ${userId}`);
                 break;
             }
         }
@@ -99,7 +99,7 @@ const start = async () => {
     try {
         await mongoose.connect(process.env.MONGO_URL);
         console.log("mongodb connected");
-        // ✅ Use server.listen NOT app.listen — required for Socket.io
+        //  Use server.listen NOT app.listen — required for Socket.io
         server.listen(PORT, () => {
             console.log(`App is listening on port ${PORT}`);
         });

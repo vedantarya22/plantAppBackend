@@ -1,4 +1,4 @@
-// models/post.model.js
+
 import mongoose from 'mongoose';
 
 const postSchema = new mongoose.Schema(
@@ -12,7 +12,7 @@ const postSchema = new mongoose.Schema(
         postImageString: { type: String, required: true },
         caption:         { type: String, default: '', maxlength: 2200 },
         
-        // ✅ Denormalized counts — updated atomically via $inc
+        //  Denormalized counts — updated atomically via $inc
         // Avoids COUNT queries on every feed load
         likesCount:    { type: Number, default: 0, min: 0 },
         commentsCount: { type: Number, default: 0, min: 0 },

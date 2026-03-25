@@ -55,5 +55,5 @@ export const sendVerificationEmail = async (toEmail, token) => {
         `
     });
  
-    console.log(`✅ Verification email sent to ${toEmail}`);
+    console.log(` Verification email sent to ${toEmail}`);
 };

@@ -1,17 +1,17 @@
-// controllers/post.controller.js
+
 import Post    from '../models/post.model.js';
 import Like    from '../models/like.model.js';
 import Comment from '../models/comment.model.js';
 import User    from '../models/user.model.js';
 
-// ── Hydrate post with isLikedByMe + isSaved ───────────────────────────────────
+//  Hydrate post with isLikedByMe + isSaved
 const hydratePost = (post, likedSet, savedSet) => ({
     ...post.toObject(),
     isLikedByMe: likedSet.has(post._id.toString()),
     isSaved:     savedSet.has(post._id.toString()),
 });
 
-// ── Create Post ───────────────────────────────────────────────────────────────
+//  Create Post 
 export const createPost = async (req, res) => {
     try {
         const { postImageString, caption } = req.body;
@@ -21,7 +21,7 @@ export const createPost = async (req, res) => {
         }
 
         const post = await Post.create({
-            userId: req.userId,   // ✅ from JWT — not from body
+            userId: req.userId,   //  from JWT — not from body
             postImageString,
             caption: caption || '',
         });
@@ -38,7 +38,7 @@ export const createPost = async (req, res) => {
     }
 };
 
-// ── Get Feed (paginated, newest first) ───────────────────────────────────────
+// Get Feed (paginated, newest first)
 export const getFeed = async (req, res) => {
     try {
         const page  = parseInt(req.query.page)  || 1;
@@ -51,7 +51,7 @@ export const getFeed = async (req, res) => {
             .limit(limit)
             .populate('userId', 'name username profileImageString');
 
-        // ✅ Batch check — did I like / save any of these posts?
+        // Batch check — did I like / save any of these posts?
         const postIds = posts.map(p => p._id);
 
         const [userLikes, currentUser] = await Promise.all([
@@ -72,7 +72,7 @@ export const getFeed = async (req, res) => {
     }
 };
 
-// ── Get Posts By User ─────────────────────────────────────────────────────────
+//  Get Posts By User 
 export const getPostsByUser = async (req, res) => {
     try {
         const posts = await Post.find({ userId: req.params.userId })
@@ -95,7 +95,7 @@ export const getPostsByUser = async (req, res) => {
     }
 };
 
-// ── Get Single Post ───────────────────────────────────────────────────────────
+//  Get Single Post 
 export const getPost = async (req, res) => {
     try {
         const post = await Post.findById(req.params.id)
@@ -120,7 +120,7 @@ export const getPost = async (req, res) => {
     }
 };
 
-// ── Delete Post ───────────────────────────────────────────────────────────────
+//  Delete Post 
 export const deletePost = async (req, res) => {
     try {
         const post = await Post.findById(req.params.id);
@@ -130,7 +130,7 @@ export const deletePost = async (req, res) => {
             return res.status(403).json({ message: 'Not authorised' });
         }
 
-        // ✅ Clean up likes, comments, saved refs atomically
+        //  Clean up likes, comments, saved refs atomically
         await Promise.all([
             Like.deleteMany({ postId: post._id }),
             Comment.deleteMany({ postId: post._id }),
@@ -144,7 +144,7 @@ export const deletePost = async (req, res) => {
     }
 };
 
-// ── Toggle Like ───────────────────────────────────────────────────────────────
+// Toggle Like 
 export const toggleLike = async (req, res) => {
     try {
         const { id: postId } = req.params;
@@ -155,7 +155,7 @@ export const toggleLike = async (req, res) => {
         const existing = await Like.findOne({ postId, userId: req.userId });
 
         if (existing) {
-            // ✅ Unlike
+            //  Unlike
             await Promise.all([
                 existing.deleteOne(),
                 Post.findByIdAndUpdate(postId, { $inc: { likesCount: -1 } }),
@@ -165,7 +165,7 @@ export const toggleLike = async (req, res) => {
                 likesCount: Math.max(0, post.likesCount - 1),
             });
         } else {
-            // ✅ Like
+            //  Like
             await Promise.all([
                 Like.create({ postId, userId: req.userId }),
                 Post.findByIdAndUpdate(postId, { $inc: { likesCount: 1 } }),
@@ -183,7 +183,7 @@ export const toggleLike = async (req, res) => {
     }
 };
 
-// ── Add Comment ───────────────────────────────────────────────────────────────
+//  Add Comment 
 export const addComment = async (req, res) => {
     try {
         const { id: postId } = req.params;
@@ -209,7 +209,7 @@ export const addComment = async (req, res) => {
     }
 };
 
-// ── Get Comments (paginated) ──────────────────────────────────────────────────
+//  Get Comments (paginated)
 export const getComments = async (req, res) => {
     try {
         const page  = parseInt(req.query.page)  || 1;
@@ -232,7 +232,7 @@ export const getComments = async (req, res) => {
     }
 };
 
-// ── Delete Comment ────────────────────────────────────────────────────────────
+//  Delete Comment 
 export const deleteComment = async (req, res) => {
     try {
         const comment = await Comment.findById(req.params.commentId);
@@ -253,7 +253,7 @@ export const deleteComment = async (req, res) => {
     }
 };
 
-// ── Toggle Save ───────────────────────────────────────────────────────────────
+//  Toggle Save 
 export const toggleSave = async (req, res) => {
     try {
         const postId = req.params.id;
@@ -278,7 +278,7 @@ export const toggleSave = async (req, res) => {
     }
 };
 
-// ── Get Saved Posts ───────────────────────────────────────────────────────────
+// Get Saved Posts 
 export const getSavedPosts = async (req, res) => {
     try {
         const user = await User.findById(req.userId).populate({

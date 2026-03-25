@@ -17,11 +17,11 @@ const getUserPlants = async (req,res)=>{
 
 const addUserPlant = async (req, res) => {
     try {
-        const { plantName, ...rest } = req.body;   // ✅ accept plantName from Swift
+        const { plantName, ...rest } = req.body;   // accept plantName from Swift
 
         const newPlant = new UserPlant({
             ...rest,
-            plantName,                              // ✅ save it
+            plantName,                              //  save it
             userId: req.userId                      // from JWT
         });
 
@@ -81,10 +81,10 @@ const removeSiteWithPlants = async (req, res) => {
     try {
         const { siteId } = req.params;
 
-        // ✅ Delete all userplants for this site
+        // Delete all userplants for this site
         await UserPlant.deleteMany({ siteId });
 
-        // ✅ Delete the site itself
+        //  Delete the site itself
         await Site.findByIdAndDelete(siteId);
 
         return res.status(200).json({ message: 'Site and all plants deleted' });

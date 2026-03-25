@@ -1,4 +1,4 @@
-// models/User.js
+
 import mongoose, { Schema } from "mongoose";
 
 
@@ -20,7 +20,7 @@ const userSchema = new mongoose.Schema({
 
 }, { timestamps: true });
 
-// ✅ Virtual: plantCount calculated on the fly, never stored
+//  Virtual: plantCount calculated on the fly, never stored
 userSchema.virtual('plantCount', {
   ref:          'UserPlant',
   localField:   '_id',

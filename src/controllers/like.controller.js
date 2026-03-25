@@ -1,8 +1,8 @@
-// controllers/like.controller.js
+
 import Like from '../models/like.model.js';
 import Post from '../models/post.model.js';
 
-// ── Toggle Like (add or remove) ───────────────────────────────────────────────
+// Toggle Like (add or remove)
 export const toggleLike = async (req, res) => {
     try {
         const { id: postId } = req.params;
@@ -13,7 +13,7 @@ export const toggleLike = async (req, res) => {
         const existing = await Like.findOne({ postId, userId: req.userId });
 
         if (existing) {
-            // ✅ Unlike — remove like + decrement count atomically
+            // Unlike remove like + decrement count atomically
             await Promise.all([
                 existing.deleteOne(),
                 Post.findByIdAndUpdate(postId, { $inc: { likesCount: -1 } }),
@@ -24,7 +24,7 @@ export const toggleLike = async (req, res) => {
                 likesCount: Math.max(0, post.likesCount - 1),
             });
         } else {
-            // ✅ Like — create like + increment count atomically
+            //  Like — create like + increment count atomically
             await Promise.all([
                 Like.create({ postId, userId: req.userId }),
                 Post.findByIdAndUpdate(postId, { $inc: { likesCount: 1 } }),
@@ -36,7 +36,7 @@ export const toggleLike = async (req, res) => {
             });
         }
     } catch (err) {
-        // ✅ Duplicate key = user already liked (race condition) — treat as success
+        //  Duplicate key = user already liked (race condition) — treat as success
         if (err.code === 11000) {
             return res.status(200).json({ isLiked: true });
         }
@@ -44,7 +44,7 @@ export const toggleLike = async (req, res) => {
     }
 };
 
-// ── Get Likers (who liked this post) ─────────────────────────────────────────
+//  Get Likers (who liked this post) 
 export const getLikers = async (req, res) => {
     try {
         const { id: postId } = req.params;

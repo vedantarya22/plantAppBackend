@@ -1,4 +1,4 @@
-// routes/auth.routes.js
+
 import { Router } from 'express';
 import { signup, login, verifyEmail,googleAuth } from '../controllers/auth.controller.js';
 

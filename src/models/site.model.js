@@ -8,11 +8,11 @@ const siteSchema = new mongoose.Schema({
     required: true
   },
   name:     { type: String, required: true },
-  icon:     { type: String, default: 'leaf' },  // ✅ renamed from sfSymbol to match your Swift struct
+  icon:     { type: String, default: 'leaf' },  //  renamed from sfSymbol to match your Swift struct
 
 }, { timestamps: true });
 
-// ✅ Never store plantCount, always derive it
+//  Never store plantCount, always derive it
 siteSchema.virtual('plantCount', {
   ref:        'UserPlant',
   localField: '_id',

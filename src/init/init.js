@@ -14,7 +14,7 @@ const MONGO_URL = process.env.MONGO_URL;
 console.log("MONGO_URL:", MONGO_URL); //  add this to verify it's being read
 
 main()
-  .then(() => console.log("✅ Connected to DB"))
+  .then(() => console.log(" Connected to DB"))
   .catch((err) => console.log(err));
 
 async function main() {

@@ -1,4 +1,4 @@
-// models/UserPlant.js
+
 import mongoose, { Schema } from "mongoose";
 
 

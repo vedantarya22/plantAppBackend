@@ -1,4 +1,4 @@
-// models/comment.model.js
+
 import mongoose from 'mongoose';
 
 const commentSchema = new mongoose.Schema(
@@ -24,7 +24,7 @@ const commentSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-// ✅ Load all comments for a post, oldest first
+//  Load all comments for a post, oldest first
 commentSchema.index({ postId: 1, createdAt: 1 });
 
 export default mongoose.model('Comment', commentSchema);

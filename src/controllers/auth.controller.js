@@ -217,7 +217,7 @@ const googleAuth = async (req, res) => {
                     message: 'An account with this email already exists. Please log in with your password.'
                 });
             }
-            // Returning Google user — just log in
+           
         } else {
             // MARK: New Google user — auto-generate a username
             const baseUsername = name.toLowerCase().replace(/\s+/g, '') + '_' + googleId.slice(-5);

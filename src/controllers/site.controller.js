@@ -1,4 +1,4 @@
-// controllers/site.controller.js
+
 import Site from '../models/site.model.js';
 
 // MARK: mirrors addSite() in SiteStore
@@ -32,7 +32,7 @@ const getUserSites = async (req, res) => {
   try {
     const sites = await Site
       .find({ userId: req.userId })
-      .populate('plantCount');    // ✅ live count from UserPlant
+      .populate('plantCount');    //  live count from UserPlant
     return res.status(200).json(sites);
   } catch (err) {
     return res.status(500).json({ message: `Something went wrong ${err}` });

@@ -123,11 +123,11 @@ const deleteUser = async (req, res) => {
             User.findByIdAndDelete(req.params.id),
         ]);
  
-        console.log(`✅ Account deleted: ${user.email}`);
+        console.log(` Account deleted: ${user.email}`);
         return res.status(200).json({ message: 'Account deleted successfully' });
  
     } catch (err) {
-        console.error('❌ deleteUser error:', err);
+        console.error(' deleteUser error:', err);
         return res.status(500).json({ message: `Something went wrong ${err}` });
     }
 };
