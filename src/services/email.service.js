@@ -9,11 +9,14 @@ dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',   // explicit host instead of service: 'gmail'
+    port: 587,                // STARTTLS, not SSL (465)
+    secure: false,            // false for STARTTLS, true is for port 465
     auth: {
-        user: process.env.EMAIL_USER,   // your Gmail address
-        pass: process.env.EMAIL_PASS    // Gmail App Password (not your login password)
-    }
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    },
+    socketOptions: { family: 4 }  // 👈 force IPv4 — the key fix for Render
 });
  
 export const sendVerificationEmail = async (toEmail, token) => {
