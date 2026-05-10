@@ -8,12 +8,17 @@ export const sendVerificationEmail = async (toEmail, token) => {
     console.log("EMAIL_PASS:", process.env.EMAIL_PASS);
 
     const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-            user: process.env.EMAIL_USER,   // your Gmail address
-            pass: process.env.EMAIL_PASS    // Gmail App Password (not your login password)
-        }
-    });
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false, // true only for 465
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+    },
+    tls: {
+        rejectUnauthorized: false
+    }
+});
 
     const verifyUrl = `${process.env.BACKEND_URL}/api/auth/verify/${token}`;
  
