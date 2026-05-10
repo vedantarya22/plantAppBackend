@@ -1,7 +1,9 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import express from "express";
 import mongoose from "mongoose";
 
-import dotenv from "dotenv";
 import { createServer } from "http";         
 import { Server } from "socket.io";
 
@@ -14,7 +16,6 @@ import authRouter from './routes/auth.routes.js';
 import protect from './middlewares/auth.middleware.js';
 import postRouter from "./routes/post.routes.js";
 
-dotenv.config();
 const app = express();
 const server = createServer(app);  
 

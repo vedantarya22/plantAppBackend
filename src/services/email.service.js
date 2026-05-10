@@ -1,25 +1,20 @@
+
+
 import nodemailer from 'nodemailer';
-import dotenv from 'dotenv';
-import { fileURLToPath } from "url";
-import path from "path";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 
-const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',   // explicit host instead of service: 'gmail'
-    port: 587,                // STARTTLS, not SSL (465)
-    secure: false,            // false for STARTTLS, true is for port 465
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    },
-    socketOptions: { family: 4 }  // 👈 force IPv4 — the key fix for Render
-});
- 
 export const sendVerificationEmail = async (toEmail, token) => {
+     console.log("EMAIL_USER:", process.env.EMAIL_USER);
+    console.log("EMAIL_PASS:", process.env.EMAIL_PASS);
+
+    const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: process.env.EMAIL_USER,   // your Gmail address
+            pass: process.env.EMAIL_PASS    // Gmail App Password (not your login password)
+        }
+    });
+
     const verifyUrl = `${process.env.BACKEND_URL}/api/auth/verify/${token}`;
  
     await transporter.sendMail({
