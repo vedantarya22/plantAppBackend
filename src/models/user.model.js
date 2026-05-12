@@ -17,6 +17,12 @@ const userSchema = new mongoose.Schema({
     verifyTokenExpiry:  { type: Date,    default: null },       
 
   savedPosts : [{type:mongoose.Schema.Types.ObjectId,ref : "Post"}],
+  
+  // E2EE: Base64-encoded Curve25519 (X25519) public key.
+    // Generated on iOS via CryptoKit on first launch.
+    // Private key stays in device Keychain and never leaves.
+    // Fetched by senders to derive shared AES-256-GCM secret via ECDH.
+    publicKey: { type: String, default: null },
 
 }, { timestamps: true });
 

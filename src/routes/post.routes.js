@@ -9,7 +9,6 @@ import {
 import  protect from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
-router.use(protect);  // all routes require JWT
 
 // Posts
 router.post('/',                    createPost);
