@@ -32,13 +32,50 @@ const signup = async (req, res) => {
             return res.status(400).json({ message: 'All fields are required' });
         }
 
-        // MARK: Duplicate Check
-        const existingUser = await User.findOne({ $or: [{ email }, { username }] });
-        if (existingUser) {
+         const existingUser = await User.findOne({
+            $or: [{ email }, { username }]
+        });
+
+        
+        // CASE 1: VERIFIED USER EXISTS
+       
+
+        if (existingUser && existingUser.isVerified) {
+
             return res.status(409).json({
-                message: existingUser.email === email
-                    ? 'Email already in use'
-                    : 'Username already taken'
+                message:
+                    existingUser.email === email
+                        ? 'Email already in use'
+                        : 'Username already taken'
+            });
+        }
+
+       
+        // CASE 2: UNVERIFIED USER EXISTS
+      
+
+        if (existingUser && !existingUser.isVerified) {
+
+            // Generate new verification token
+            const {
+                token: verifyToken,
+                expiry: verifyTokenExpiry
+            } = generateVerifyToken();
+
+            // Update verification token
+            existingUser.verifyToken = verifyToken;
+            existingUser.verifyTokenExpiry = verifyTokenExpiry;
+
+            await existingUser.save();
+
+            // Resend verification email
+            await sendVerificationEmail(existingUser.email, verifyToken);
+
+            console.log(`Verification email resent to ${existingUser.email}`);
+
+            return res.status(200).json({
+                message:
+                    'Account already exists but is not verified. Verification email resent.'
             });
         }
 
