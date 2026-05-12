@@ -1,4 +1,4 @@
-import ChatRoom from "../models/chatRoom.model.js";
+import ChatRoom from "../models/chatroom.model.js";
 import Message from "../models/message.model.js";
 import User from "../models/user.model.js";
 

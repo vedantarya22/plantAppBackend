@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import ChatRoom from "../models/chatRoom.model.js";
+import ChatRoom from "../models/chatroom.model.js";
 import Message  from "../models/message.model.js";
 
 const onlineUsers = new Map();
