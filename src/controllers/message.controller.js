@@ -13,20 +13,40 @@ import User from "../models/user.model.js";
 // Called once when the iOS app generates its Curve25519 key pair on first launch.
 export const registerPublicKey = async (req, res) => {
   try {
+    console.log("REQ.USERID:", req.userId);
+
     const { publicKey } = req.body;
 
-    if (!publicKey || typeof publicKey !== "string") {
-      return res
-        .status(400)
-        .json({ success: false, message: "publicKey is required" });
+    console.log("PUBLIC KEY:", publicKey);
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.userId,
+      { publicKey },
+      { new: true }
+    );
+
+    console.log("UPDATED USER:", updatedUser);
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
     }
 
-    await User.findByIdAndUpdate(req.userId, { publicKey });
+    res.status(200).json({
+      success: true,
+      message: "Public key registered",
+      publicKey: updatedUser.publicKey
+    });
 
-    res.status(200).json({ success: true, message: "Public key registered" });
   } catch (err) {
     console.error("registerPublicKey error:", err);
-    res.status(500).json({ success: false, message: "Server error" });
+
+    res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
   }
 };
 
