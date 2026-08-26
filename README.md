@@ -13,9 +13,9 @@ Node.js/Express backend powering **Leafora**, an iOS plant care app with AR plan
 |------|---------|
 | ![Home](./screenshots/home.png) | ![Community](./screenshots/community.png) |
 
-| Task Overview | Chat |
+| Task Overview | Plants Page |
 |---------------|------|
-| ![Tasks](./screenshots/tasks.png) | ![Chat](./screenshots/chat.png)
+| ![Tasks](./screenshots/tasks.png) | ![Chat](./screenshots/garden.png)
 
 ---
 
